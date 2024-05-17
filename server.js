@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Redirigir a video.html en la ruta raíz
 app.get('/', (req, res) => {
-    res.redirect('/video.html');
+    res.redirect('/index.html');
 });
 
 const server = http.createServer(app);
