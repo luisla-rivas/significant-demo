@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
-const http = require('http');
+const https = require('https');
+const fs = require('fs');
 const socketIo = require('socket.io');
 const cors = require('cors');
 
@@ -25,7 +26,12 @@ app.get('/', (req, res) => {
     res.redirect('/index.html');
 });
 
-const server = http.createServer(app);
+// Leer los certificados SSL
+const privateKey = fs.readFileSync('key.pem', 'utf8');
+const certificate = fs.readFileSync('cert.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
+const server = https.createServer(credentials, app);
 const io = socketIo(server, {
     cors: {
         origin: '*',
@@ -59,7 +65,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
+    console.log(`Servidor escuchando en https://localhost:${port}`);
 });
 
 console.log('Servidor socket.io configurado');
