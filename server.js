@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const socketIo = require('socket.io');
@@ -26,18 +27,33 @@ app.get('/', (req, res) => {
     res.redirect('/index.html');
 });
 
-// Leer los certificados SSL
-const privateKey = fs.readFileSync('key.pem', 'utf8');
-const certificate = fs.readFileSync('cert.pem', 'utf8');
-const credentials = { key: privateKey, cert: certificate };
+let server;
+let io;
 
-const server = https.createServer(credentials, app);
-const io = socketIo(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    }
-});
+// Detectar si los archivos de certificados existen
+if (fs.existsSync('key.pem') && fs.existsSync('cert.pem')) {
+    const privateKey = fs.readFileSync('key.pem', 'utf8');
+    const certificate = fs.readFileSync('cert.pem', 'utf8');
+    const credentials = { key: privateKey, cert: certificate };
+
+    server = https.createServer(credentials, app);
+    io = socketIo(server, {
+        cors: {
+            origin: '*',
+            methods: ['GET', 'POST']
+        }
+    });
+    console.log('Usando HTTPS');
+} else {
+    server = http.createServer(app);
+    io = socketIo(server, {
+        cors: {
+            origin: '*',
+            methods: ['GET', 'POST']
+        }
+    });
+    console.log('Usando HTTP');
+}
 
 let userCount = 0;
 
@@ -65,7 +81,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-    console.log(`Servidor escuchando en https://localhost:${port}`);
+    console.log(`Servidor escuchando en ${fs.existsSync('key.pem') && fs.existsSync('cert.pem') ? 'https' : 'http'}://localhost:${port}`);
 });
 
 console.log('Servidor socket.io configurado');
