@@ -132,6 +132,13 @@
         startButton.addEventListener('click', function() {
             initialScreen.style.display = 'none';
             waitingScreen.style.display = 'flex';
+            
+            // Intentar iniciar la reproducción del video y pausar inmediatamente
+            video.play().then(() => {
+                video.pause();
+            }).catch(error => {
+                console.log('Failed to start the video:', error);
+            });
         });
 
         const socket = io();
@@ -141,7 +148,11 @@
             if (command === 'play') {
                 console.log("Ejecutando comando 'play'");
                 waitingScreen.style.display = 'none';
-                video.play();
+                video.play().then(() => {
+                    console.log('Video started successfully.');
+                }).catch(error => {
+                    console.log('Failed to start the video:', error);
+                });
             } else if (command === 'pause') {
                 console.log("Ejecutando comando 'pause'");
                 video.pause();
