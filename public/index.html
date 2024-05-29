@@ -80,6 +80,7 @@
             width: 100%;
             height: auto;
             z-index: 1;
+            display: none; /* Ocultar el video inicialmente */
         }
         #startButton {
             background: linear-gradient(45deg, #ffffff, #f1f6fa);
@@ -134,11 +135,15 @@
             waitingScreen.style.display = 'flex';
             
             // Intentar iniciar la reproducción del video y pausar inmediatamente
-            video.play().then(() => {
-                video.pause();
-            }).catch(error => {
-                console.log('Failed to start the video:', error);
-            });
+            try {
+                video.play().then(() => {
+                    video.pause();
+                }).catch(error => {
+                    console.log('Failed to start the video:', error);
+                });
+            } catch (error) {
+                console.log('Play attempt failed:', error);
+            }
         });
 
         const socket = io();
@@ -148,11 +153,16 @@
             if (command === 'play') {
                 console.log("Ejecutando comando 'play'");
                 waitingScreen.style.display = 'none';
-                video.play().then(() => {
-                    console.log('Video started successfully.');
-                }).catch(error => {
-                    console.log('Failed to start the video:', error);
-                });
+                video.style.display = 'block'; // Mostrar el video solo cuando se reciba el comando 'play'
+                try {
+                    video.play().then(() => {
+                        console.log('Video started successfully.');
+                    }).catch(error => {
+                        console.log('Failed to start the video:', error);
+                    });
+                } catch (error) {
+                    console.log('Play attempt failed:', error);
+                }
             } else if (command === 'pause') {
                 console.log("Ejecutando comando 'pause'");
                 video.pause();
