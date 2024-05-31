@@ -1,0 +1,30 @@
+Helper for MacOS systems
+
+Be sure docker is installed and running (i.e. run Docker Desktop)
+
+Use Terminal to place docker commands for:
+
+//Run commands in proyect folder "significant-demo"
+luisla@MBP14 ~ % cd /Users/luisla/Developer/significant-demo 
+
+//Build node-alpine image, form Dockerfile file in significant-demo folder
+luisla@MBP14 significant-demo % docker build --tag node-alpine .
+
+//Run significant container from node-alpine image, conecting node port to local port 8080, and copying files
+luisla@MBP14 significant-demo % docker run -d -p 8080:3000 \
+-v ./Public:/significant/public \
+--name significant \
+node-alpine
+
+//While running significant container, copy modifiyed index.html inside Public folder, inside container
+luisla@MBP14 significant-demo %  docker cp ./Public/index.html significant:/significant/public/index.html
+
+//Run a shell cli inside container for checking (exit command to quit from container environment)
+luisla@MBP14 significant-demo % docker exec -ti significant sh  
+
+//Remove container
+luisla@MBP14 significant-demo % docker rm -f significant
+
+//Run NGROK to obtain an external IP to access localhost:8080 server 
+//Ctrl+C to quit
+luisla@MBP14 significant-demo % ngrok http 8080   
