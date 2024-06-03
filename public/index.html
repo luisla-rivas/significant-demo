@@ -21,6 +21,19 @@
             align-items: center;
             background-color: black; /* Opcional, para un fondo negro */
         }
+
+        #logo{
+            position: fixed;
+            margin: auto;
+            bottom: 1rem;
+            z-index: 100;
+            max-width: 8rem;
+        }
+
+        #logo > img{
+            max-width: 100%;
+        }
+
         #initialScreen {
             position: absolute;
             top: 0;
@@ -139,12 +152,18 @@
         Your browser does not support the video tag.
     </video>
 
+    <div id="logo">
+        
+        <img src="logo.png" alt="">
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const video = document.getElementById('myVideo');
         const initialScreen = document.getElementById('initialScreen');
         const waitingScreen = document.getElementById('waitingScreen');
         const startButton = document.getElementById('startButton');
+        const logo = document.getElementById('logo');
 
         // Permitir reproducción automática del video en silencio
         video.muted = true;
@@ -175,7 +194,8 @@
                 console.log("Ejecutando comando 'play'");
                 waitingScreen.style.display = 'none';
                 video.style.display = 'block'; // Mostrar el video solo cuando se reciba el comando 'play'
-                video.style.zIndex = '11'; // Establecer z-index alto para el video
+                video.style.zIndex = '100'; // Establecer z-index alto para el video
+                logo.style.display = "none";
                 try {
                     video.play().then(() => {
                         console.log('Video started successfully.');
