@@ -74,6 +74,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
         video {
             max-width: 100%;
             max-height: 100%;
@@ -84,7 +85,10 @@
             left: 0;
             z-index: 1; /* Establecer z-index bajo inicialmente */
             display: none; /* Ocultar el video inicialmente */
+
         }
+
+        
         #startButton {
             background: linear-gradient(45deg, #ffffff, #f1f6fa);
             border: none;
@@ -105,6 +109,7 @@
         #startButton:active {
             transform: scale(1.05);
         }
+
     </style>
 </head>
 <body>
@@ -116,70 +121,117 @@
         <div id="spinner"></div>
         <p>El evento aún no ha comenzado.<br> <b>Por favor, espere...</b></p>
     </div>
-    <video id="myVideo" muted playsinline>
-        <source src="demo.mp4" type="video/mp4">
-        Your browser does not support the video tag.
+    <video id="videoPlayer" muted playsinline>
+        <!-- 
+            <source src="demo.mp4" type="video/mp4">
+            Your browser does not support the video tag. 
+        -->
     </video>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const video = document.getElementById('myVideo');
+        //const socket = io();
+        const controlSocket = io('/control');
+        const videoSocket = io('/video');
+
+        const video = document.getElementById('videoPlayer');
         const initialScreen = document.getElementById('initialScreen');
         const waitingScreen = document.getElementById('waitingScreen');
         const startButton = document.getElementById('startButton');
-
-        // Permitir reproducción automática del video en silencio
-        video.muted = true;
-        video.controls = false;
+        const mediaSource = new MediaSource();
+        let sourceBuffer;
+        let videoStarted = false;
+        let queue = [];
 
         // Manejar el clic en el botón de inicio
         startButton.addEventListener('click', function() {
             initialScreen.style.display = 'none';
             waitingScreen.style.display = 'flex';
-            
-            // Intentar iniciar la reproducción del video y pausar inmediatamente
-            try {
-                video.play().then(() => {
-                    video.pause();
-                }).catch(error => {
-                    console.log('Failed to start the video:', error);
-                });
-            } catch (error) {
-                console.log('Play attempt failed:', error);
-            }
+            controlSocket.emit('command', 'ready');
         });
 
-        const socket = io();
-        
-        socket.on('command', function(command) {
+        //Control Socket
+        controlSocket.on('command', function(command) {
             console.log("Mensaje recibido del servidor:", command);
             if (command === 'play') {
-                console.log("Ejecutando comando 'play'");
+                console.log("Mostrando pantalla de video");
                 waitingScreen.style.display = 'none';
                 video.style.display = 'block'; // Mostrar el video solo cuando se reciba el comando 'play'
                 video.style.zIndex = '11'; // Establecer z-index alto para el video
-                try {
-                    video.play().then(() => {
-                        console.log('Video started successfully.');
-                    }).catch(error => {
-                        console.log('Failed to start the video:', error);
-                    });
-                } catch (error) {
-                    console.log('Play attempt failed:', error);
-                }
-            } else if (command === 'pause') {
-                console.log("Ejecutando comando 'pause'");
-                video.pause();
-            }
+                
+            } 
         });
 
-        socket.on('connect', function() {
+        controlSocket.on('connect', function() {
             console.log('Conectado al servidor socket.io');
         });
 
-        socket.on('disconnect', function() {
+        controlSocket.on('disconnect', function() {
             console.log('Desconectado del servidor socket.io');
         });
+
+
+        // Permitir reproducción automática del video en silencio
+        video.muted = true;
+        video.controls = true;
+        
+        video.src = URL.createObjectURL(mediaSource);
+
+
+        mediaSource.addEventListener('sourceopen', () => {
+            sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+
+            sourceBuffer.addEventListener('updateend', () => {
+                if (queue.length > 0 && !sourceBuffer.updating) {
+                    sourceBuffer.appendBuffer(queue.shift());
+                }
+            });
+        });
+
+        videoSocket.on('videoData', (chunk) => {
+            console.log('Client recibed videoData chunk');
+            if (sourceBuffer && !sourceBuffer.updating) {
+                sourceBuffer.appendBuffer(new Uint8Array(chunk));
+                console.log('adding chunk');
+                if (!videoStarted) {
+                    videoStarted = true;
+                    video.play();
+                    console.log('video started');
+                }
+            } else {
+                queue.push(new Uint8Array(chunk));
+            }
+        });
+
+        videoSocket.on('videoEnd', () => {
+            console.log('Client recibed videoEnd event');
+            //mediaSource.endOfStream();
+        });
+
+        videoSocket.on('videoPause', () => {
+            console.log('Client recibed videoPause event');
+            video.pause();
+        });
+
+        videoSocket.on('videoResume', () => {
+            console.log('Client recibed videoResume event');
+            video.resume();
+        });
+
+/*
+        //Control device orientation
+        const adjustVideoOrientation = () => {
+            if (window.innerWidth > window.innerHeight) {
+                video.classList.add('rotate');
+            } else {
+                video.classList.remove('rotate');
+            }
+        };
+
+        window.addEventListener('resize', adjustVideoOrientation);
+        window.addEventListener('orientationchange', adjustVideoOrientation);
+
+        adjustVideoOrientation();*/
     </script>
 </body>
 </html>

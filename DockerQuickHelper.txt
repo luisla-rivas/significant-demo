@@ -28,3 +28,9 @@ luisla@MBP14 significant-demo % docker rm -f significant
 //Run NGROK to obtain an external IP to access localhost:8080 server 
 //Ctrl+C to quit
 luisla@MBP14 significant-demo % ngrok http 8080   
+
+//Borrar la imagen
+% docker rmi node-alpines:latest
+
+//En VSCode
+> Reopen in Container
