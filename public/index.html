@@ -148,8 +148,9 @@
         <p>El evento aún no ha empezado.<br> <b>¡Mientras tanto, disfruta de la presentación!</b></p>
     </div>
     <video id="myVideo" muted playsinline>
-        <source src="demo.mp4" type="video/mp4">
-        Your browser does not support the video tag.
+        <!-- <source src="demo.mp4">
+                Your browser does not support the video tag. 
+        -->
     </video>
 
     <div id="logo">
@@ -158,8 +159,11 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     <script>
+
         const video = document.getElementById('myVideo');
+        const hlsVideoSrc = 'demo/prog_index.m3u8';
         const initialScreen = document.getElementById('initialScreen');
         const waitingScreen = document.getElementById('waitingScreen');
         const startButton = document.getElementById('startButton');
@@ -174,7 +178,7 @@
             initialScreen.style.display = 'none';
             waitingScreen.style.display = 'flex';
             
-            // Intentar iniciar la reproducción del video y pausar inmediatamente
+            /* // Intentar iniciar la reproducción del video y pausar inmediatamente
             try {
                 video.play().then(() => {
                     video.pause();
@@ -184,7 +188,21 @@
             } catch (error) {
                 console.log('Play attempt failed:', error);
             }
+            */
         });
+
+        // HLS support - First check for native browser support
+        if (false && video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = hlsVideoSrc;
+            // If no native HLS support, check if HLS.js is supported
+        } else if (Hls.isSupported()) {
+            var hls = new Hls();
+            hls.loadSource(hlsVideoSrc);
+            hls.attachMedia(video);
+        } /*else {
+            console.error('HLS is not supported in this browser.');
+            video.src = 'demo.mp4';
+        }*/
 
         const socket = io();
         
@@ -205,6 +223,7 @@
                 } catch (error) {
                     console.log('Play attempt failed:', error);
                 }
+                
             } else if (command === 'pause') {
                 console.log("Ejecutando comando 'pause'");
                 video.pause();
