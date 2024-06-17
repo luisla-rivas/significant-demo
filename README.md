@@ -25,6 +25,11 @@ This webpage contains an html tag `<video></video>` that allows every connected 
 
 You can see in this video how a MacOS Safari, a MacOS Firefox and and real iPad Pro Safari browser (Quicktime capture) run a demo-video, when **Play** button is pressed in a `control.html` page.
 
+
+https://github.com/luisla-rivas/significant-demo/assets/55875304/39918a1d-b08c-4a87-b82f-2a5c1dd107f8
+
+https://github.com/luisla-rivas/significant-demo/media_previews/significant-demo-capture.mov
+
 <video>
     <source src="media_previews/significant-demo-capture.mov">
 </video>
